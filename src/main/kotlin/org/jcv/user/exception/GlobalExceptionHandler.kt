@@ -7,6 +7,7 @@ import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -31,6 +32,17 @@ class GlobalExceptionHandler {
         )
     }
 
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNoResourceFoundException(ex: NoResourceFoundException): ResponseEntity<ApiResponse<*>> {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+            ApiResponse(
+                success = false,
+                message = "Resource not found: ${ex.resourcePath}",
+                data = null
+            )
+        )
+    }
+
     @ExceptionHandler(RuntimeException::class)
     fun handleRuntimeException(ex: RuntimeException): ResponseEntity<ApiResponse<*>> {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
@@ -44,6 +56,9 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception::class)
     fun handleGeneralException(ex: Exception): ResponseEntity<ApiResponse<*>> {
+        // Log for debugging
+        println("Unhandled exception: ${ex.javaClass.name} - ${ex.message}")
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
             ApiResponse(
                 success = false,
@@ -52,5 +67,4 @@ class GlobalExceptionHandler {
             )
         )
     }
-
 }
